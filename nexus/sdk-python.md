@@ -285,7 +285,7 @@ Alternatively, the author of a Temporal Nexus service may choose to define an al
 
 It’s the “always-async operation backed by a Temporal execution primitive” that we’re discussing in this section. We’re going to provide a convenience shorthand, analogous to the one above for defining sync operations, that implements a workflow-backed operation in an opinionated way. For users who want an unopinionated interaction with workflows and other Temporal primitives, a Temporal client will be available via a `ContextVar` in the vanilla `start` methods and they can do whatever they want with it, as long as they return their result synchronously (this has a `10s` limit). In contrast, our utility will do the right thing w.r.t. e.g. request-ID-based deduplication, and will be the only way to implement an arbitrary-duration async operation in a Temporal Nexus service.
 
-The proposal here follows the  [2b. Convenience utilities for shorthand operation definition](https://www.notion.so/2b-Convenience-utilities-for-shorthand-operation-definition-1c98fc567738800481eae2d29bc2b12a?pvs=21) `@nexusrpc.handler.sync_operation` decorator above:
+The proposal here follows the  [2b. Convenience utilities for shorthand operation definition](#2b-convenience-utilities-for-shorthand-operation-definition) `@nexusrpc.handler.sync_operation` decorator above:
 
 ```python
 @nexusrpc.handler.service(interface=interface.MyNexusService)
