@@ -1,11 +1,9 @@
-# Python Nexus design I
+# Python Nexus design proposal
 
-@Dan Davison
+This is an early-stage design document for how Nexus functionality will be exposed in the Nexus Python SDK and in the Temporal Python SDK. The design
+is still evolving, and feedback is welcome.
 
-**Draft prototyping PRs**
-
-The design proposed here is prototyped in this draft PR.
-
+The design proposed here is being prototyped in this draft PR:
 [https://github.com/temporalio/samples-python/pull/174](https://github.com/temporalio/samples-python/pull/174)
 
 # Introduction
@@ -91,15 +89,15 @@ import nexusrpc.handler
 
 @nexusrpc.handler.service(interface=interface.MyNexusService, name="my-service")  # import-time check that interface was implemented
 class MyNexusService: # instantiated when instantiating worker
-		# User free to define custom constructor
+	# User is free to define custom constructor
 
     @nexusrpc.handler.operation(name="my-invalid-python-identifier")
     def echo(self) -> nexusrpc.handler.Operation[EchoInput, EchoOutput]:  # typing.Protocol interface
-		    # Factory called when instantiating worker
-        return EchoOperation()  # user can pass anything to operation constructor
+		# Factory called when instantiating worker
+        return EchoOperation()  # User can pass anything to operation constructor
 
 class EchoOperation: # interface declaration optional; see below
-		# User free to define custom constructor
+	# User is free to define custom constructor
 		
     async def start(self, input: EchoInput, options: nexusrpc.handler.StartOperationOptions) -> EchoOutput:
         return EchoOutput(input.message)
@@ -191,7 +189,7 @@ What’s needed here is a way to define a service along with its operations “i
 So, recall the familiar Python options linked above:  [gRPC,](https://github.com/grpc/grpc/blob/4e9357bca1408596663a218c0c608a4c0560a867/examples/python/route_guide/route_guide_server.py#L65) [xmlrpc [stdlib]](https://docs.python.org/3/library/xmlrpc.server.html#simplexmlrpcserver-example), [starlette/FastAPI](https://www.starlette.io/applications/#storing-state-on-the-app-instance), [Django class-based-views](https://docs.djangoproject.com/en/5.1/topics/class-based-views/). Python programmers are accustomed to implementing an operation handler as a method on some sort of service class: 
 
 ```python
-*# This code (from Python gRPC docs) is not part of the proposal*
+# *This code (from Python gRPC docs) is not part of the proposal*
 class MyService:  # instantiated at server-start time
     def my_handler(self, my_input, context) -> MyResult: ...
 ```
@@ -201,7 +199,7 @@ In addition to the fully manual style, we’ll support defining Nexus operations
 ```python
 @nexusrpc.handler.service(interface=interface.MyNexusService)
 class MyNexusService:
-		# user can pass anything to service constructor at worker-start time
+	# User can pass anything to service constructor at worker-start time
 
     @nexusrpc.handler.sync_operation  # decorator returns factory method: (service) -> Operation 
     async def echo(self, input: EchoInput, _: nexusrpc.handler.StartOperationOptions) -> EchoOutput:
@@ -218,7 +216,7 @@ For comparison, here’s the “fully manual” style again:
 ```python
 @nexusrpc.handler.service(interface=interface.MyNexusService)
 class MyNexusService:
-		# user can pass anything to service constructor at worker-start time
+	# User can pass anything to service constructor at worker-start time
 
     @nexusrpc.handler.operation
     def echo(self) -> nexusrpc.handler.Operation[EchoInput, EchoOutput]:
@@ -271,9 +269,6 @@ This isn’t attractive or Pythonic. Firstly, inline function `def`s, where nece
 
 <img width="1314" alt="Image" src="https://github.com/user-attachments/assets/6c2aee0a-f1be-47ed-bfb5-8e738304a418" />
 
-### I’ve been using the shorthand style. How do I implement a custom `cancel` handler?
-
-[Section moved into Temporal Nexus [below](https://www.notion.so/Python-Nexus-design-I-1c48fc5677388047ba08c898446cce0a?pvs=21)]
 
 # Temporal Nexus
 
@@ -290,7 +285,7 @@ The proposal here follows the  [2b. Convenience utilities for shorthand operatio
 ```python
 @nexusrpc.handler.service(interface=interface.MyNexusService)
 class MyNexusService:
-		@temporalio.nexus.handler.workflow_operation
+	@temporalio.nexus.handler.workflow_operation
     async def hello(
         self, input: HelloInput, options: nexusrpc.handler.StartOperationOptions
     ) -> nexusrpc.handler.StartOperationResult[HelloOutput]:
@@ -311,21 +306,21 @@ Note that:
 
 ### I’ve been using the shorthand style. How do I implement a custom `cancel` handler?
 
-One answer will always be
+Create a fully manual operation class, and move your `start` method from the service to your operation class.
 
-> Create a fully manual operation class, and move your `start` method from the service to your operation class.
-> 
 
-But there’s another option, which the Temporal Python SDK exemplifies with its update validators:
+**[ALTERNATIVES CONSIDERED]**
+
+Another possibility is this, which the Temporal Python SDK exemplifies with its update validators:
 
 ```python
 @nexusrpc.handler.service(interface=interface.MyNexusService)
 class MyNexusService:
-		@temporalio.nexus.handler.workflow_operation
+	@temporalio.nexus.handler.workflow_operation
     async def hello(
         self, input: HelloInput, options: nexusrpc.handler.StartOperationOptions
     ) -> nexusrpc.handler.StartOperationResult[HelloOutput]:
-		    # workflow start implementation
+		# workflow start implementation
     
     # Not required: workflow_operation provides a default cancel implementation
     @hello.cancel
@@ -334,7 +329,6 @@ class MyNexusService:
 
 ```
 
-[This isn’t in the prototype PRs yet.]
 
 # Cheat-sheet: Go vs Java vs Python
 
